@@ -176,4 +176,23 @@ systemctl daemon-reload
 sudo systemctl enable superset.service
 sudo systemctl start superset.service
 ```
+For connecting or integrating the Apache pinot with Apache Superset.
+```
+pinot://172.25.0.5:8000/query/sql?controller=http://172.25.0.5:9000
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
