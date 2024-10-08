@@ -181,7 +181,12 @@ For connecting or integrating the Apache pinot with Apache Superset.
 pinot://172.25.0.5:8000/query/sql?controller=http://172.25.0.5:9000
 ```
 
-
+To stop, remove and clear the running docker containers.
+```
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker system prune -a -f --volumes
+```
 
 
 
