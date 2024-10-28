@@ -364,6 +364,9 @@ upload_segment_command="/opt/pinot/bin/pinot-admin.sh UploadSegment \
 echo "Executing command: $upload_segment_command"
 docker exec pinot bash -c "$upload_segment_command"
 ```
+```
+pip install --upgrade $(pip list --outdated | awk 'NR>2 {print $1}')
+```
 
 
 
