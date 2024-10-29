@@ -369,6 +369,101 @@ pip install --upgrade $(pip list --outdated | awk 'NR>2 {print $1}')
 ```
 
 
+# Batch Ingestion into the influxdb
+
+```
+
+# Load environment variables
+import os
+import numpy as np
+from influxdb_client import InfluxDBClient, Point, WritePrecision  # type: ignore
+from influxdb_client.client.write_api import SYNCHRONOUS  # type: ignore
+import pandas as pd
+
+# Set display options for pandas
+pd.set_option('display.max_columns', None)
+
+# Load environment variables
+token = os.getenv("INFLUXDB_TOKEN", "UXHZ0-LEw4O9wBEVm_TpODVBDit6x86fQmj87y5Fuq7Mgaz0vrZhG8ponUap5DUshmWfFfiG8pQBBeAJ4IZIdQ==")
+
+org = "IISc"
+url = "http://13.52.83.241:8086"
+bucket = "sensor_data"
+
+# Initialize InfluxDB client with increased timeout
+client = InfluxDBClient(url=url, token=token, org=org, timeout=30_000)  # 30 seconds
+
+# Ensure the bucket exists
+buckets_api = client.buckets_api()
+existing_buckets = buckets_api.find_buckets().buckets
+if not any(bucket.name == "sensor_data" for bucket in existing_buckets):
+    buckets_api.create_bucket(bucket_name=bucket, org=org)
+
+# Load the CSV data
+columns = ['date', 'timestamp', 'site_id', 'serial_num', 'ac_voltage', 'ac_current',
+           'ac_frequency', 'dc_voltage', 'dc_current', 'temperature', 'energy_produced']
+data = pd.read_csv("C://Users//admin//OneDrive - Talentpace//15_site_data//telemetry//Site-4056397.csv", usecols=columns)
+
+# Convert timestamp to UTC and then to int64 in nanoseconds
+data['timestamp'] = pd.to_datetime(data['timestamp'], utc=True).astype(np.int64)
+
+# Check for missing values
+if data['timestamp'].isnull().any():
+    print("Warning: Some timestamps are null after conversion.")
+
+write_api = client.write_api(write_options=SYNCHRONOUS)
+
+# Prepare a list to hold all the points
+points = []
+
+# Iterate over the DataFrame and create points
+for index, row in data.iterrows():
+    # Validate tag values
+    if pd.isnull(row['site_id']) or pd.isnull(row['serial_num']):
+        print(f"Warning: Missing tag values in row {index}. Skipping this row.")
+        continue  # Skip this row if tags are missing
+
+    # Validate and convert fields
+    try:
+        energy_produced = int(row['energy_produced']) if not pd.isnull(row['energy_produced']) else 0
+        temperature = int(row['temperature']) if not pd.isnull(row['temperature']) else 0
+    except ValueError as e:
+        print(f"Error converting values in row {index}: {e}. Skipping this row.")
+        continue
+
+    # Create the point and append it to the list
+    point = Point("sensor_readings") \
+        .tag("site_id", str(row['site_id'])) \
+        .tag("serial_num", str(row['serial_num'])) \
+        .field("ac_voltage", row['ac_voltage']) \
+        .field("ac_current", row['ac_current']) \
+        .field("ac_frequency", row['ac_frequency']) \
+        .field("dc_voltage", row['dc_voltage']) \
+        .field("dc_current", row['dc_current']) \
+        .field("temperature", temperature) \
+        .field("energy_produced", energy_produced) \
+        .time(row['timestamp'], WritePrecision.NS)
+
+    points.append(point)
+
+# Log the total number of points to be written
+print(f"Total points to write: {len(points)}")
+
+# Batch size for writing
+batch_size = 1000  # Adjust based on your testing
+for i in range(0, len(points), batch_size):
+    batch_points = points[i:i + batch_size]
+    try:
+        write_api.write(bucket=bucket, org=org, record=batch_points)
+        print(f"Wrote batch {i // batch_size + 1} with {len(batch_points)} points.")
+    except Exception as e:
+        print(f"Error writing batch {i // batch_size + 1}: {e}")
+
+client.close()
+
+```
+
+
 
 
 
