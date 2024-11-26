@@ -462,7 +462,11 @@ for i in range(0, len(points), batch_size):
 client.close()
 
 ```
-
+##  To remove the docker images and docker containers.
+```
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+```
 
 
 
