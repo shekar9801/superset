@@ -34,7 +34,10 @@ Dependencies
    6. warnings
 
 Install any missing dependencies using pip install <library_name>.
-e.g ``` pip install pandas ```
+e.g 
+```
+pip install pandas 
+```
 
 ## Code Overview
 
