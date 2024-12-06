@@ -26,13 +26,12 @@ The script performs the following tasks:
 Dependencies
 
    Ensure the following Python libraries are installed:
-   .pandas
-   .numpy
-   .math
-   .os
-   .datetime (part of Python standard library) 
-   .warnings
-   .matplotlib
+   1.pandas
+   2.numpy
+   3.math
+   4.os
+   5.datetime (part of Python standard library) 
+   6.warnings
 
 Install any missing dependencies using pip install <library_name>.
 
